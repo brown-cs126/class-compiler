@@ -51,7 +51,7 @@ let label_name macos name = if macos then "_" ^ name else name
 let string_of_directive = function
   (* frontmatter *)
   | Global l ->
-      Printf.sprintf "global %s" (label_name macos name)
+      Printf.sprintf "global %s" (label_name macos l)
   (* labels *)
   | Label l ->
       label_name macos l ^ ":"
