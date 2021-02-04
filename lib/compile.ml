@@ -3,14 +3,20 @@ open Asm
 
 exception BadExpression of s_exp
 
+let num_shift = 2
+
+let num_mask = 0b11
+
+let num_tag = 0b00
+
 let rec compile_exp (exp : s_exp) : directive list =
   match exp with
   | Num n ->
-      [Mov (Reg Rax, Imm n)]
+      [Mov (Reg Rax, Imm (n lsl 2))]
   | Lst [Sym "add1"; arg] ->
-      compile_exp arg @ [Add (Reg Rax, Imm 1)]
+      compile_exp arg @ [Add (Reg Rax, Imm (1 lsl num_shift))]
   | Lst [Sym "sub1"; arg] ->
-      compile_exp arg @ [Sub (Reg Rax, Imm 1)]
+      compile_exp arg @ [Sub (Reg Rax, Imm (1 lsl num_shift))]
   | e ->
       raise (BadExpression e)
 
@@ -23,10 +29,16 @@ let rec interp_exp (exp : s_exp) : int =
   match exp with
   | Num n ->
       n
+  | Sym "true" ->
+      1
+  | Sym "false" ->
+      0
   | Lst [Sym "add1"; arg] ->
       interp_exp arg + 1
   | Lst [Sym "sub1"; arg] ->
       interp_exp arg - 1
+  | Lst [Sym "num?"; arg] ->
+      interp_exp arg
   | e ->
       raise (BadExpression e)
 
