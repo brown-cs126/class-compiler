@@ -1,5 +1,6 @@
 open S_exp
 open Asm
+open Util
 
 exception BadExpression of s_exp
 
