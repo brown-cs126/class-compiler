@@ -1,4 +1,5 @@
 open S_exp
+open Util
 
 exception BadExpression of s_exp
 
