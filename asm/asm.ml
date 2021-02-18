@@ -1,4 +1,4 @@
-type register = Rax | Rcx | R8 | Rsp
+type register = Rax | Rcx | R8 | Rsp | Rdi
 
 let string_of_register ?(last_byte = false) (reg : register) : string =
   match (reg, last_byte) with
@@ -18,6 +18,10 @@ let string_of_register ?(last_byte = false) (reg : register) : string =
       "rsp"
   | Rsp, false ->
       "rsp"
+  | Rdi, true ->
+      "rdi"
+  | Rdi, false ->
+      "rdi"
 
 type operand = Reg of register | Imm of int | MemOffset of (operand * operand)
 
