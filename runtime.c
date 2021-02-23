@@ -43,3 +43,8 @@ int main(int argc, char **argv) {
   print_value(entry(heap));
   return 0;
 }
+
+void error() {
+  printf("ERROR");
+  exit(1);
+}

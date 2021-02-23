@@ -64,7 +64,8 @@ let rec interp_exp env (exp : s_exp) : value =
     | _ ->
         Boolean false )
   | Lst [Sym "if"; test_exp; then_exp; else_exp] ->
-      if interp_exp env test_exp <> Boolean false then interp_exp env then_exp
+      if not (interp_exp env test_exp = Boolean false) then
+        interp_exp env then_exp
       else interp_exp env else_exp
   | Lst [Sym "+"; e1; e2] -> (
     match (interp_exp env e1, interp_exp env e2) with
@@ -84,10 +85,17 @@ let rec interp_exp env (exp : s_exp) : value =
         Boolean (n1 < n2)
     | _ ->
         raise (BadExpression exp) )
-  | Lst [Sym "="; e1; e2] ->
-      Boolean (interp_exp env e1 = interp_exp env e2)
+  | Lst [Sym "="; e1; e2] -> (
+    match (interp_exp env e1, interp_exp env e2) with
+    | Number n1, Number n2 ->
+        Boolean (n1 = n2)
+    | _ ->
+        raise (BadExpression exp) )
   | e ->
       raise (BadExpression e)
 
 let interp (program : string) : string =
   interp_exp Symtab.empty (parse program) |> string_of_value
+
+let interp_err (program : string) : string =
+  try interp program with BadExpression _ -> "ERROR"

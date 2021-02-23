@@ -39,6 +39,12 @@ let lf_to_bool : directive list =
 
 let stack_address (stack_index : int) = MemOffset (Reg Rsp, Imm stack_index)
 
+let ensure_num (op : operand) : directive list =
+  [ Mov (Reg R8, op)
+  ; And (Reg R8, Imm num_mask)
+  ; Cmp (Reg R8, Imm num_tag)
+  ; Jnz "error" ]
+
 let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
     directive list =
   match exp with
@@ -83,7 +89,9 @@ let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
       @ [And (Reg Rax, Imm num_mask); Cmp (Reg Rax, Imm num_tag)]
       @ zf_to_bool
   | Lst [Sym "add1"; arg] ->
-      compile_exp tab stack_index arg @ [Add (Reg Rax, operand_of_num 1)]
+      compile_exp tab stack_index arg
+      @ ensure_num (Reg Rax)
+      @ [Add (Reg Rax, operand_of_num 1)]
   | Lst [Sym "sub1"; arg] ->
       compile_exp tab stack_index arg @ [Sub (Reg Rax, operand_of_num 1)]
   | Lst [Sym "if"; test_exp; then_exp; else_exp] ->
@@ -126,7 +134,9 @@ let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
       raise (BadExpression e)
 
 let compile (program : s_exp) : string =
-  [Global "entry"; Label "entry"] @ compile_exp Symtab.empty (-8) program @ [Ret]
+  [Global "entry"; Extern "error"; Label "entry"]
+  @ compile_exp Symtab.empty (-8) program
+  @ [Ret]
   |> List.map string_of_directive
   |> String.concat "\n"
 
@@ -143,6 +153,9 @@ let compile_and_run (program : string) : string =
   let r = input_line inp in
   close_in inp ; r
 
+let compile_and_run_err (program : string) : string =
+  try compile_and_run program with BadExpression _ -> "ERROR"
+
 let difftest (examples : string list) =
   let results =
     List.map (fun ex -> (compile_and_run ex, Interp.interp ex)) examples
@@ -158,4 +171,5 @@ let test () =
     ; "(not 3)"
     ; "(not (not false))"
     ; "(not (zero? 4))"
-    ; "(num? (add1 3))" ]
+    ; "(num? (add1 3))"
+    ; "(add1 false)" ]
