@@ -64,7 +64,7 @@ let rec interp_exp env (exp : s_exp) : value =
     | _ ->
         Boolean false )
   | Lst [Sym "if"; test_exp; then_exp; else_exp] ->
-      if interp_exp env test_exp != Boolean false then interp_exp env then_exp
+      if interp_exp env test_exp <> Boolean false then interp_exp env then_exp
       else interp_exp env else_exp
   | Lst [Sym "+"; e1; e2] -> (
     match (interp_exp env e1, interp_exp env e2) with
