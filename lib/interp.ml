@@ -68,29 +68,37 @@ let rec interp_exp env (exp : s_exp) : value =
         interp_exp env then_exp
       else interp_exp env else_exp
   | Lst [Sym "+"; e1; e2] -> (
-    match (interp_exp env e1, interp_exp env e2) with
-    | Number n1, Number n2 ->
-        Number (n1 + n2)
-    | _ ->
-        raise (BadExpression exp) )
+      let l = interp_exp env e1 in
+      let r = interp_exp env e2 in
+      match (l, r) with
+      | Number n1, Number n2 ->
+          Number (n1 + n2)
+      | _ ->
+          raise (BadExpression exp) )
   | Lst [Sym "-"; e1; e2] -> (
-    match (interp_exp env e1, interp_exp env e2) with
-    | Number n1, Number n2 ->
-        Number (n1 - n2)
-    | _ ->
-        raise (BadExpression exp) )
+      let l = interp_exp env e1 in
+      let r = interp_exp env e2 in
+      match (l, r) with
+      | Number n1, Number n2 ->
+          Number (n1 - n2)
+      | _ ->
+          raise (BadExpression exp) )
   | Lst [Sym "<"; e1; e2] -> (
-    match (interp_exp env e1, interp_exp env e2) with
-    | Number n1, Number n2 ->
-        Boolean (n1 < n2)
-    | _ ->
-        raise (BadExpression exp) )
+      let l = interp_exp env e1 in
+      let r = interp_exp env e2 in
+      match (l, r) with
+      | Number n1, Number n2 ->
+          Boolean (n1 < n2)
+      | _ ->
+          raise (BadExpression exp) )
   | Lst [Sym "="; e1; e2] -> (
-    match (interp_exp env e1, interp_exp env e2) with
-    | Number n1, Number n2 ->
-        Boolean (n1 = n2)
-    | _ ->
-        raise (BadExpression exp) )
+      let l = interp_exp env e1 in
+      let r = interp_exp env e2 in
+      match (l, r) with
+      | Number n1, Number n2 ->
+          Boolean (n1 = n2)
+      | _ ->
+          raise (BadExpression exp) )
   | e ->
       raise (BadExpression e)
 
