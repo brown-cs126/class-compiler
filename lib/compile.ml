@@ -2,8 +2,6 @@ open S_exp
 open Asm
 open Util
 
-exception BadExpression of s_exp
-
 let num_shift = 2
 
 let num_mask = 0b11
@@ -45,9 +43,18 @@ let ensure_num (op : operand) : directive list =
   ; Cmp (Reg R8, Imm num_tag)
   ; Jnz "error" ]
 
+let align_stack_index (stack_index : int) : int =
+  if stack_index mod 16 = -8 then stack_index else stack_index - 8
+
 let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
     directive list =
   match exp with
+  | Lst [Sym "read-num"] ->
+      [ Mov (stack_address stack_index, Reg Rdi)
+      ; Add (Reg Rsp, Imm (align_stack_index stack_index))
+      ; Call "read_num"
+      ; Sub (Reg Rsp, Imm (align_stack_index stack_index))
+      ; Mov (Reg Rdi, stack_address stack_index) ]
   | Lst [Sym "pair"; e1; e2] ->
       compile_exp tab stack_index e1
       @ [Mov (stack_address stack_index, Reg Rax)]

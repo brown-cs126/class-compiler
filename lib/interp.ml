@@ -1,8 +1,6 @@
 open S_exp
 open Util
 
-exception BadExpression of s_exp
-
 type value = Number of int | Boolean of bool | Pair of (value * value)
 
 let rec string_of_value (v : value) : string =
@@ -14,10 +12,16 @@ let rec string_of_value (v : value) : string =
   | Pair (v1, v2) ->
       Printf.sprintf "(pair %s %s)" (string_of_value v1) (string_of_value v2)
 
-let rec interp_exp env (exp : s_exp) : value =
+let input_channel = ref stdin
+
+let rec interp_exp (env : value symtab) (exp : s_exp) : value =
   match exp with
+  | Lst [Sym "read-num"] ->
+      Number (input_line !input_channel |> int_of_string)
   | Lst [Sym "pair"; e1; e2] ->
-      Pair (interp_exp env e1, interp_exp env e2)
+      let l = interp_exp env e1 in
+      let r = interp_exp env e2 in
+      Pair (l, r)
   | Lst [Sym "left"; e] -> (
     match interp_exp env e with
     | Pair (v, _) ->

@@ -48,3 +48,9 @@ void error() {
   printf("ERROR");
   exit(1);
 }
+
+uint64_t read_num() {
+  int r;
+  scanf("%d", &r);
+  return (uint64_t)(r) << num_shift;
+}
