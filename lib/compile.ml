@@ -55,6 +55,24 @@ let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
       ; Call "read_num"
       ; Sub (Reg Rsp, Imm (align_stack_index stack_index))
       ; Mov (Reg Rdi, stack_address stack_index) ]
+  | Lst [Sym "print"; e] ->
+      compile_exp tab stack_index e
+      @ [ Mov (stack_address stack_index, Reg Rdi)
+        ; Mov (Reg Rdi, Reg Rax)
+        ; Add (Reg Rsp, Imm (align_stack_index stack_index))
+        ; Call "print_value"
+        ; Sub (Reg Rsp, Imm (align_stack_index stack_index))
+        ; Mov (Reg Rdi, stack_address stack_index)
+        ; Mov (Reg Rax, operand_of_bool true) ]
+  | Lst [Sym "newline"] ->
+      [ Mov (stack_address stack_index, Reg Rdi)
+      ; Add (Reg Rsp, Imm (align_stack_index stack_index))
+      ; Call "print_value"
+      ; Sub (Reg Rsp, Imm (align_stack_index stack_index))
+      ; Mov (Reg Rdi, stack_address stack_index)
+      ; Mov (Reg Rax, operand_of_bool true) ]
+  | Lst (Sym "do" :: exps) when List.length exps > 0 ->
+      List.concat_map (compile_exp tab stack_index) exps
   | Lst [Sym "pair"; e1; e2] ->
       compile_exp tab stack_index e1
       @ [Mov (stack_address stack_index, Reg Rax)]
@@ -141,7 +159,12 @@ let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
       raise (BadExpression e)
 
 let compile (program : s_exp) : string =
-  [Global "entry"; Extern "error"; Label "entry"]
+  [ Global "entry"
+  ; Extern "error"
+  ; Extern "read_num"
+  ; Extern "print_value"
+  ; Extern "print_newline"
+  ; Label "entry" ]
   @ compile_exp Symtab.empty (-8) program
   @ [Ret]
   |> List.map string_of_directive
@@ -152,31 +175,25 @@ let compile_to_file (program : string) : unit =
   output_string file (compile (parse program)) ;
   close_out file
 
-let compile_and_run (program : string) : string =
+let compile_and_run_io (program : string) (input : string) : string =
   compile_to_file program ;
   ignore (Unix.system "nasm program.s -f macho64 -o program.o") ;
   ignore (Unix.system "gcc program.o runtime.o -o program") ;
-  let inp = Unix.open_process_in "./program" in
+  let inp, outp = Unix.open_process "./program" in
+  output_string outp input ;
+  close_out outp ;
   let r = input_all inp in
   close_in inp ; r
 
-let compile_and_run_err (program : string) : string =
-  try compile_and_run program with BadExpression _ -> "ERROR"
+let compile_and_run_err (program : string) (input : string) : string =
+  try compile_and_run_io program input with BadExpression _ -> "ERROR"
 
-let difftest (examples : string list) =
+let difftest (examples : (string * string) list) =
   let results =
-    List.map (fun ex -> (compile_and_run ex, Interp.interp ex)) examples
+    List.map
+      (fun (ex, i) -> (compile_and_run_err ex i, Interp.interp_err ex i))
+      examples
   in
   List.for_all (fun (r1, r2) -> r1 = r2) results
 
-let test () =
-  difftest
-    [ "43"
-    ; "5"
-    ; "(add1 (sub1 4))"
-    ; "(sub1 (sub1 1))"
-    ; "(not 3)"
-    ; "(not (not false))"
-    ; "(not (zero? 4))"
-    ; "(num? (add1 3))"
-    ; "(add1 false)" ]
+let test () = difftest [("(print (read-num))", "1")]

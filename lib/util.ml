@@ -27,7 +27,7 @@ type defn = {name: string; args: string list; body: s_exp}
 
 let sym = function Sym s -> s | e -> raise (BadExpression e)
 
-let get_defns_and_body (exps : s_exp list) =
+let defns_and_body (exps : s_exp list) : defn list * s_exp =
   let get_defn = function
     | Lst [Sym "define"; Lst (Sym name :: args); body] ->
         {name; args= List.map sym args; body}
