@@ -20,6 +20,14 @@
 (define (odd n) (if (zero? n) false (not (even n))))
 (print (even (read-num)))
 
+
+
+
+
+
+
+
+
 ;; Example 5
 
 (define (fib-helper fib-n-2 fib-n-1 n target)
