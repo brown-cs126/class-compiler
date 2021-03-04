@@ -22,7 +22,9 @@ let rec interp_exp (defns : defn list) (env : value symtab) (exp : s_exp) :
   | Lst (Sym f :: args) when is_defn defns f ->
       let defn = get_defn defns f in
       if List.length args = List.length defn.args then
-        interp_exp defns env defn.body
+        let vals = args |> List.map (interp_exp defns env) in
+        let fenv = List.combine defn.args vals |> Symtab.of_list in
+        interp_exp defns fenv defn.body
       else raise (BadExpression exp)
   | Lst [Sym "read-num"] ->
       Number (input_line !input_channel |> int_of_string)
