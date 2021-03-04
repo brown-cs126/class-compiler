@@ -67,7 +67,7 @@ let rec compile_exp (tab : int symtab) (stack_index : int) (exp : s_exp) :
   | Lst [Sym "newline"] ->
       [ Mov (stack_address stack_index, Reg Rdi)
       ; Add (Reg Rsp, Imm (align_stack_index stack_index))
-      ; Call "print_value"
+      ; Call "print_newline"
       ; Sub (Reg Rsp, Imm (align_stack_index stack_index))
       ; Mov (Reg Rdi, stack_address stack_index)
       ; Mov (Reg Rax, operand_of_bool true) ]
@@ -174,6 +174,12 @@ let compile_to_file (program : string) : unit =
   let file = open_out "program.s" in
   output_string file (compile (parse program)) ;
   close_out file
+
+let compile_and_run (program : string) : unit =
+  compile_to_file program ;
+  ignore (Unix.system "nasm program.s -f macho64 -o program.o") ;
+  ignore (Unix.system "gcc program.o runtime.o -o program") ;
+  ignore (Unix.system "./program")
 
 let compile_and_run_io (program : string) (input : string) : string =
   compile_to_file program ;
