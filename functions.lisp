@@ -6,7 +6,7 @@
 ;; Example 2
 
 (define (f x y) (+ x y))
-(define (g x) (f y y))
+(define (g x) (f x x))
 (print (f 4 5))
 
 ;; Example 3
