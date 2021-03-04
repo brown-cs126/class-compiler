@@ -7,11 +7,17 @@ let gensym : string -> string =
     counter := !counter + 1 ;
     symbol
 
-module Symtab = Map.Make (struct
+module ST = Map.Make (struct
   type t = string
 
   let compare = compare
 end)
+
+module Symtab = struct
+  include ST
+
+  let of_list l = l |> List.to_seq |> of_seq
+end
 
 type 'a symtab = 'a Symtab.t
 
@@ -48,3 +54,22 @@ let defns_and_body (exps : s_exp list) : defn list * s_exp =
 let is_defn defns name = List.exists (fun d -> d.name = name) defns
 
 let get_defn defns name = List.find (fun d -> d.name = name) defns
+
+let defn_label s =
+  let nasm_char c =
+    match c with
+    | 'a' .. 'z'
+    | 'A' .. 'Z'
+    | '0' .. '9'
+    | '_'
+    | '$'
+    | '#'
+    | '@'
+    | '~'
+    | '.'
+    | '?' ->
+        c
+    | _ ->
+        '_'
+  in
+  Printf.sprintf "function_%s_%d" (String.map nasm_char s) (Hashtbl.hash s)
