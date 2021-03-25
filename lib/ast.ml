@@ -128,21 +128,3 @@ let program_of_s_exps (exps : s_exp list) : program =
   go exps []
 
 exception BadExpression of expr
-
-let rec fv (bound : string list) = function
-  | Var s when not (List.mem s bound) ->
-      [s]
-  | Let (v, e, body) ->
-      fv bound e @ fv (v :: bound) body
-  | If (te, the, ee) ->
-      fv bound te @ fv bound the @ fv bound ee
-  | Do es ->
-      List.concat_map (fv bound) es
-  | Call (exp, args) ->
-      fv bound exp @ List.concat_map (fv bound) args
-  | Prim1 (_, e) ->
-      fv bound e
-  | Prim2 (_, e1, e2) ->
-      fv bound e1 @ fv bound e2
-  | _ ->
-      []
