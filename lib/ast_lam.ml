@@ -83,7 +83,7 @@ let rec expr_of_expr_lam (defns : defn list ref) : expr_lam -> expr = function
   | Lambda (args, body) ->
       let name = gensym "_lambda" in
       defns := {name; args; body= expr_of_expr_lam defns body} :: !defns ;
-      Var name
+      Closure name
 
 let program_of_s_exps (exps : s_exp list) : program =
   let defns = ref [] in
